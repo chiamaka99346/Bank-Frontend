@@ -29,7 +29,7 @@ const ViewCustomerTransactions = () => {
 
   const retrieveAllTransactions = async () => {
     const response = await axios.get(
-      "https://bankapi.cloudwitches.online/api/bank/transaction/history?userId=" +
+      "https://bankapi.amakacloud.online/api/bank/transaction/history?userId=" +
         customer.id,
       {
         headers: {

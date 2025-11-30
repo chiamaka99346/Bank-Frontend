@@ -22,7 +22,7 @@ const ViewAllBankAccounts = () => {
 
   const retrieveAllAccounts = async () => {
     const response = await axios.get(
-      "https://bankapi.cloudwitches.online/api/bank/account/fetch/all",
+      "https://bankapi.amakacloud.online/api/bank/account/fetch/all",
       {
         headers: {
           Authorization: "Bearer " + admin_jwtToken, // Replace with your actual JWT token
@@ -35,7 +35,7 @@ const ViewAllBankAccounts = () => {
 
   const retrieveAllAccountsByBankAccount = async () => {
     const response = await axios.get(
-      "https://bankapi.cloudwitches.online/api/bank/account/search/all?accountNumber=" +
+      "https://bankapi.amakacloud.online/api/bank/account/search/all?accountNumber=" +
         accountNumber,
       {
         headers: {
@@ -85,7 +85,7 @@ const ViewAllBankAccounts = () => {
     updateBankAccountStatusRequest.accountId = accountId;
     updateBankAccountStatusRequest.status = "Open";
 
-    fetch("https://bankapi.cloudwitches.online/api/bank/account/update/status", {
+    fetch("https://bankapi.amakacloud.online/api/bank/account/update/status", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -152,7 +152,7 @@ const ViewAllBankAccounts = () => {
     updateBankAccountStatusRequest.accountId = accountId;
     updateBankAccountStatusRequest.status = "Lock";
 
-    fetch("https://bankapi.cloudwitches.online/api/bank/account/update/status", {
+    fetch("https://bankapi.amakacloud.online/api/bank/account/update/status", {
       method: "POST",
       headers: {
         Accept: "application/json",

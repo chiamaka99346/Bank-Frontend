@@ -27,7 +27,7 @@ const AddBankAccount = () => {
   };
 
   const saveAccount = (e) => {
-    fetch("https://bankapi.cloudwitches.online/api/bank/account/add", {
+    fetch("https://bankapi.amakacloud.online/api/bank/account/add", {
       method: "POST",
       headers: {
         Accept: "application/json",
