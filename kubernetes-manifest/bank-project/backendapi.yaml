@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-backend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bank-backend-deployment
+  template:
+    metadata:
+      labels:
+        app: bank-backend-deployment
+    spec:
+      containers:
+      - name: bank-backend-container
+        image: 062266257890.dkr.ecr.us-east-1.amazonaws.com/bank-backendapi:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: bank-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: bank-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: bank-config
+              key: DB_NAME
+
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: bank-secret
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bank-secret
+              key: DB_PASSWORD

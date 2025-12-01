@@ -1,0 +1,74 @@
+
+name: Bank Frontend Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'main_bank_app_frontend/**'
+      - '.github/workflows/frontend-cicd.yml'
+
+jobs:
+  Continues-Integration_build_and_push:
+    runs-on: self-hosted
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+      ECR_REPO: 062266257890.dkr.ecr.us-east-1.amazonaws.com
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to awscli
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Build container image
+      run: docker build -t bank-app-frontend:latest ./main_bank_app_frontend
+
+    - name: Log in to ECR with short-lived credentials
+      run: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ env.ECR_REPO }}
+  
+    - name: Tag Docker image
+      run: docker tag bank-app-frontend:latest ${{ env.ECR_REPO }}/bank-frontend:${{ github.run_number }}
+    
+    - name: Push image to ECR
+      run: docker push ${{ env.ECR_REPO }}/bank-frontend:${{ github.run_number }}
+
+    - name: Clean up Docker image locally
+      run: |
+        docker rmi bank-app-frontend:latest
+        docker rmi ${{ env.ECR_REPO }}/bank-frontend:${{ github.run_number }}
+
+  Continues-Update_k8s_manifest:
+    runs-on: self-hosted
+    needs: Continues-Integration_build_and_push
+    steps:
+    - name: Checkout kubernetes manifest repository
+      env:
+          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
+          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+      run: |
+         git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chiamaka99346/Bank-Manifest.git
+         
+         cd Bank-Manifest
+         git config --global user.email "chiamaka99346@github.com"
+         git config --global user.name "chiamaka99346"
+
+         sed -i "s+062266257890.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:.*+062266257890.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:${{ github.run_number }}+g" ./bank-project/frontend.yaml
+
+         cat ./bank-project/frontend.yaml | grep -q "062266257890.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:${{ github.run_number }}"
+
+         git add bank-project/frontend.yaml
+         git commit -m "Update frontend image to version ${{ github.run_number }}"
+         git push origin main
+
+    - name: Clean up kubernetes manifest repo
+      run: rm -rf Bank-Manifest
