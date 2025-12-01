@@ -47,25 +47,23 @@ jobs:
   Continues-Update_k8s_manifest:
     runs-on: ubuntu-latest
     needs: Continues-Integration_build_and_push
+    permissions:
+      contents: write  # needed to push
     steps:
-    - name: Checkout kubernetes manifest repository
-      env:
-          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
-          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
-      run: |
-         git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chiamaka99346/Bank-Manifest.git
-         
-         cd Bank-Manifest
-         git config --global user.email "chiamaka99346@github.com"
-         git config --global user.name "chiamaka99346"
+      - name: Checkout manifest repo
+        uses: actions/checkout@v4
+        with:
+          repository: chiamaka99346/Bank-Manifest
+          token: ${{ secrets.MANIFEST_PAT }}  # PAT with repo scope
+          path: Bank-Manifest
 
-         sed -i "s+570071717271.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:.*+570071717271.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:${{ github.run_number }}+g" ./bank-project/frontend.yaml
+      - name: Update image tag
+        working-directory: Bank-Manifest
+        run: |
+          git config user.email "chiamaka99346@github.com"
+          git config user.name "chiamaka99346"
+          sed -i "s+570071717271.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:.*+570071717271.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:${{ github.run_number }}+g" ./bank-project/frontend.yaml
+          git add bank-project/frontend.yaml
+          git commit -m "Update frontend image to version ${{ github.run_number }}" || echo "No changes"
+          git push origin main
 
-         cat ./bank-project/frontend.yaml | grep -q "570071717271.dkr.ecr.us-east-1.amazonaws.com/bank-frontend:${{ github.run_number }}"
-
-         git add bank-project/frontend.yaml
-         git commit -m "Update frontend image to version ${{ github.run_number }}"
-         git push origin main
-
-    - name: Clean up kubernetes manifest repo
-      run: rm -rf Bank-Manifest
