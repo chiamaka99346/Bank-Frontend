@@ -1,5 +1,5 @@
 
-name: Bank Frontend Pipelines
+name: Bank Frontend Pipeline
 
 on:
   push:
