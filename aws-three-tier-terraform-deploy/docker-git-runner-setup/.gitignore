@@ -1,5 +1,0 @@
-# Environment variables with sensitive data
-.env
-
-# Runner work directory data
-runner-work/
